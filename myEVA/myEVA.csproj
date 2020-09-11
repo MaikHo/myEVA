@@ -73,6 +73,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Kontakt.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Promt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
