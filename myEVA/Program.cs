@@ -21,6 +21,7 @@ namespace myEVA
             if (args.Length > 0)
             {
                 MessageBox.Show("Argument wurde angegeben");
+                MessageBox.Show(args[0]);
             }
         }
     }
