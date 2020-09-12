@@ -24,7 +24,10 @@ namespace myEVA
     Link speichern -> markierten Link in DB speichern mit schlagwörter und so 
                         Link speichern
                         Linkliste in einer Form zeigen
-         
+    
+    Wecker / Counter
+
+
     */    
     public partial class Form1 : Form
     {
