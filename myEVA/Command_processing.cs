@@ -59,57 +59,49 @@ namespace myEVA
             {
                 // Antwortvielfalt
                 Random r = new Random();
-                string[] hallo_computer = new string[4] { user + " was kann ich für dich tun", "ja " + user, "ja", "jup" };
+                string[] hallo_computer = new string[4] { command_answer, "ja " + user, "ja", "jup" };
 
-                command_name = _command_name;
+                //command_name = _command_name;
                 command_answer = hallo_computer[r.Next(4)];
-                command_info = "Systembefehl, holt die App wieder in den Vordergrund!";
-                command_argument = "normal";
+                //command_info = "Systembefehl, holt die App wieder in den Vordergrund!";
+                //command_argument = "normal";
 
             }
             else
             {
                 switch (_command_name)
                 {
-                    case "pause": case "bereitschaft": case "minimieren":
+                    case "bereitschaft":
                         // Antwortvielfalt
                         Random r = new Random();
-                        string[] minimieren_computer = new string[4] { "bis gleich " + user, "zu Befehl " + user, "bin dann mal weg", "jup" };
-                        command_name = _command_name;
+                        string[] minimieren_computer = new string[4] { command_answer, "zu Befehl " + user, "bin dann mal weg", "jup" };
+                        //command_name = _command_name;
                         command_answer = minimieren_computer[r.Next(4)];
-                        command_info = "Systembefehl, minimiert die App";
-                        command_argument = "minimieren";
+                        //command_info = "Systembefehl, minimiert die App";
+                        //command_argument = "minimieren";
                         
                         break;
                     
-                    case "maximieren":
-                        Random r1 = new Random();
-                        string[] maximieren_computer = new string[4] { user + " was kann ich für dich tun", "ja " + user, "ja", "jup" };
-                        command_name = _command_name;
-                        command_answer = maximieren_computer[r1.Next(4)];
-                        command_info = "Systembefehl, holt die App wieder in den Vordergrund!";
-                        command_argument = "normal";
-                        
-                        break;
                     
-                    case "ausschalten": case "beenden":
-                        command_name = _command_name;
-                        command_answer = "welches Programm?";
-                        command_info = "Systembefehl zum beenden von Programmen!";
-                        command_argument = "none";
+                    
+                    case "Programm beenden":
+                        //command_name = _command_name;
+                        //command_answer = "welches Programm?";
+                        //command_info = "Systembefehl zum beenden von Programmen!";
+                        //command_argument = "none";
                         command_kill = true;
                         break;
                     
                         
                     case "datum":
-                        command_name = _command_name;
+                        //command_name = _command_name;
                         command_answer = DateTime.Now.ToString("d");
-                        command_info = "Systembefehl, sagt das aktuelle Datum.";
+                        //command_info = "Systembefehl, sagt das aktuelle Datum.";
                         break;
                     case "zeit":
-                        command_name = _command_name;
+                        //command_name = _command_name;
                         command_answer = DateTime.Now.ToString("HH:mm");
-                        command_info = "Systembefehl, sagt die aktuelle Uhrzeit an.";
+                        //command_info = "Systembefehl, sagt die aktuelle Uhrzeit an.";
                         break;
                     case "vorlesen":
                         string zwischenablage = null;                        
@@ -121,14 +113,14 @@ namespace myEVA
                         {
                             zwischenablage = "Bitte markiere erst etwas.";
                         }
-                        command_name = _command_name;
+                        //command_name = _command_name;
                         command_answer = zwischenablage;
-                        command_info = "Systembefehl, liest den Text aus der Zwischenablage vor.";
+                        //command_info = "Systembefehl, liest den Text aus der Zwischenablage vor.";
                         break;
                     case "schalte dich aus":
-                        command_name = _command_name;
-                        command_answer = "ok " + user + ", dann bis demnächst";
-                        command_info = "Systembefehl, schließt die App.";
+                        //command_name = _command_name;
+                        //command_answer = "ok " + user + ", dann bis demnächst";
+                        //command_info = "Systembefehl, schließt die App.";
                         command_argument = "exit";
                         break;
                     default:
@@ -209,11 +201,21 @@ namespace myEVA
                 //Programm läuft nicht
                 if (command_argument == "app")
                 {
-                    // command_argument bekommt die ProcessID
-                    Process P = new Process();
-                    P.StartInfo.FileName = command_name +".exe";
-                    P.Start();
-                    command_argument = Convert.ToString(P.Id);
+                    try
+                    {
+                        //command_argument bekommt die ProcessID
+                        Process P = new Process();
+                        P.StartInfo.FileName = command_name + ".exe";
+                        P.Start();
+                        command_argument = Convert.ToString(P.Id);
+                    }
+                    catch (Exception)
+                    {
+
+                        MessageBox.Show("Ich konnte "+ command_name + ".exe nicht starten!");
+                    }
+
+
                 }                
                 else  // Programm läuft
                 {

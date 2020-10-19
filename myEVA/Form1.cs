@@ -17,6 +17,8 @@ using System.Data.SQLite;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Threading;
+using System.Xml;
+using System.IO;
 
 namespace myEVA
 {
@@ -40,7 +42,9 @@ namespace myEVA
         string db_info;
         string db_argument;
 
+        bool aktiv = true;
         bool command_kill = false;
+
 
         // Hauptkommandos
         string[] main_commands =
@@ -57,6 +61,15 @@ namespace myEVA
             "schalte dich aus"
             
         };
+ 
+        //string cmd_command;
+        //string cmd_answer;
+        //string cmd_info;
+        //string cmd_argument;
+
+        //Commands cmd_computer;
+        //Commands cmd_tab_start;
+
 
         //string user = "Maik";
         /// Unter Assistant -> Eigenschaften -> Einstellungen
@@ -71,6 +84,11 @@ namespace myEVA
                             app = windows programm
                             cmd = ipconfig (Konsole)
                             564984 = irgendeine ProcessID
+                            
+                            exit = myEVA schließen
+
+        sollten vielleicht noch  text hinzufügen
+
         */
 
 
@@ -84,16 +102,29 @@ namespace myEVA
             {
                 set_user();
                 set_computer();
+                set_main_commands();
             }
 
+            // abfrage ob die Basisbefehle schon in der Datenbank existieren
+            // wenn nicht speichern mit set_basis_commands
+            // abrufen mit get_basis_commands ???  Wird eigentlich schon geladen beim Start aus der DB
+
+            //if (!File.Exists("settings.xml"))
+            //{
+            //    set_settings();
+            //}
+            //get_settings(computer);
+            //MessageBox.Show(cmd_command+"\n" + cmd_answer + cmd_info);
+            //get_settings("tab start");
+            //MessageBox.Show(cmd_command + "\n" + cmd_answer + cmd_info);
         }
 
-        
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
             Voice_in_out();
-
+            
             string befehlszeile = "Befehlszeile: \n" + Environment.CommandLine + "\n\n";
             string arbeitsverzeichniss = "Arbeitsverzeichnis: \n" + Environment.CurrentDirectory + "\n\n";
 
@@ -108,14 +139,14 @@ namespace myEVA
 
             string buildnummer = "Buildnummer: \n" + Environment.Version.Build.ToString() + "\n\n";
 
-            lbl_systeminfo.Text = befehlszeile
-                                + arbeitsverzeichniss
-                                + computername
-                                + benutzername
-                                + betriebssystem_version
-                                + buildnummer
-                                + systemverzeichniss
-                                + prozessoren_kern_anzahl;
+            //lbl_systeminfo.Text = befehlszeile
+            //                    + arbeitsverzeichniss
+            //                    + computername
+            //                    + benutzername
+            //                    + betriebssystem_version
+            //                    + buildnummer
+            //                    + systemverzeichniss
+            //                    + prozessoren_kern_anzahl;
 
 
 
@@ -133,18 +164,19 @@ namespace myEVA
             // Computernamen in die Commandoliste hinzufügen damit er angesprochen werden kann
             commands.Add(computer);
             // Hauptcommandos hinzufügen
-            commands.Add(main_commands);
+            //commands.Add(main_commands);
 
 
             // Computernamen in die Befehlliste hinzufügen 
-            comboBox_commands.Items.Add(computer);
+            comboBox_my_commands.Items.Add(computer);
             
             // Hauptcommandos in die Befehlliste hinzufügen 
-            foreach (string value in main_commands)
+ /*           foreach (string value in main_commands)
             {
                 comboBox_commands.Items.Add(value);
                 
             }
+ */
 
             // Commandos aus der Datenbank holen und zu den Command / Befehlsliste hinzufügen
             connection.Open();
@@ -157,6 +189,7 @@ namespace myEVA
                 {
                     commands.Add(reader.GetString(reader.GetOrdinal("command")));
                     comboBox_my_commands.Items.Add(reader.GetString(reader.GetOrdinal("command")));
+                    //MessageBox.Show(reader.GetString(reader.GetOrdinal("command")));
                 }
             connection.Close();
 
@@ -184,29 +217,61 @@ namespace myEVA
 
         private void recEngine_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
+            
+
             string speak_command = e.Result.Text;
+
+            db_command_select(speak_command);
+
+
             //MessageBox.Show(speak_command);
             //s.SpeakAsync("Du sagtest " + speak_command + "1");
             //s.SpeakAsync("Du sagtest " + speak_command + "2");
             //s.Speak("Du sagtest " + speak_command + "3");
 
-            
+            if (aktiv)
+            {
+                // ausführen sprich zuhören
+                //MessageBox.Show("hört zu");
+            }
+            else
+            {
+                if (speak_command == computer)
+                {
+                    aktiv = true;
+
+                }
+                else
+                {
+                    //MessageBox.Show("Ruhemodus");
+                    return;
+                }
+
+                
+            }
+
+
 
             if (speak_command == "tab start" || speak_command == "tab befehle")
             {
+                s.SpeakAsync(db_answer);
                 if (speak_command == "tab start")
                 {
                     tabControl1.SelectedTab = tabPage1;
+                    
                 }
                 if (speak_command == "tab befehle")
                 {
                     tabControl1.SelectedTab = tabPage2;
+                    
                 }
             }
             else
             {
-                db_command_select(speak_command);
+                //db_command_select(speak_command);
                 // in der Datenbank gespeicherte Antwort ansagen lassen bevor das Ergebniss angesagt wird
+
+                // mit command_kill muss ich mir noch was besseres einfallen lassen
                 if (command_kill == false)
                 {
                     s.SpeakAsync(db_answer);
@@ -279,17 +344,6 @@ namespace myEVA
         
 
 
-
-
-
-
-
-        
-
-
-
-
-
         private void Form1_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Minimized)
@@ -314,20 +368,14 @@ namespace myEVA
         private void Normalisiere_Form1()
         {            
             WindowState = FormWindowState.Normal;
+            aktiv = true;
         }
 
         private void Minimiere_Form1()
         {
-            WindowState = FormWindowState.Minimized;            
+            WindowState = FormWindowState.Minimized;
+            aktiv = false;
         }
-
-
-
-
-
-
-
-
 
 
 
@@ -429,13 +477,6 @@ namespace myEVA
 
 
 
-
-
-
-
-
-
-
         private void set_user()
         {
             user = Prompt.ShowDialog("Wie soll ich dich nennen?", "Dein Name?");
@@ -451,9 +492,58 @@ namespace myEVA
         }
 
 
+        private void set_main_commands()
+        {
+            
+            ///*
+            db_command_insert(  computer, 
+                                user + " was kann ich für dich tun", 
+                                "Systembefehl, holt die App wieder in den Vordergrund! (Ktivierungsaufruf)",
+                                "normal");
 
+            db_command_insert(  "tab start",
+                                "ich wechsel auf Start",
+                                "Systembefehl, wechsel auf den Tab Start!",
+                                "none");
+            db_command_insert(  "tab befehle",
+                                "ich wechsle auf Befehle",
+                                "Systembefehl, wechsel auf den Tab Befehle!",
+                                "none");
+            db_command_insert(  "bereitschaft",
+                                "Bis gleich!",
+                                "Systembefehl, schickt die App in den Hintergrund und führt keine Befehle mehr aus (außer dem Aktivierungsaufruf)!",
+                                "minimieren");
+            db_command_insert(  "Programm beenden",
+                                "Welches Programm soll ich beenden?",
+                                "Systembefehl, zum beenden von Programmen!",
+                                "none");
+            db_command_insert(  "Datum",
+                                "",
+                                "Systembefehl, sagt das aktuelle Datum.",
+                                "none");
+            db_command_insert(  "Zeit",
+                                "",
+                                "Systembefehl, sagt die aktuelle Uhrzeit an.",
+                                "none");
+            db_command_insert(  "Vorlesen",
+                                "",
+                                "Systembefehl, liest den Text aus der Zwischenablage vor.",
+                                "none");
+            db_command_insert(  "schalte dich aus",
+                                "ok " + user + ", dann bis zu nächsten mal",
+                                "Systembefehl, schließt die App MyEVA.",
+                                "exit");
+            //*/
 
+            
+        }
 
+        private void get_settings(string read)
+        {
+            
+            
+
+        }
 
 
 
@@ -481,50 +571,40 @@ namespace myEVA
                 string curItem = comboBox_my_commands.SelectedItem.ToString();
                 db_command_select(curItem);
 
-
                 this.btn_command_save.Visible = true;
                 this.btn_delete.Visible = true;
-
                 
                 tb_command_name.Text = db_command;
                 tb_command_answer.Text = db_answer;
                 tb_command_info.Text = db_info;
                 tb_command_argument.Text = db_argument;
 
-
-
-
             }
         }
 
-        private void comboBox_commands_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (comboBox_commands.SelectedIndex != -1)
-            {
-                string curItem = comboBox_commands.SelectedItem.ToString();                
-                db_command_select(curItem);
-                               
+        //private void comboBox_commands_SelectedIndexChanged(object sender, EventArgs e)
+        //{
+        //    if (comboBox_my_commands.SelectedIndex != -1)
+        //    {
+        //        string curItem = comboBox_my_commands.SelectedItem.ToString();                
+        //        db_command_select(curItem);                               
 
-                foreach (string value in main_commands)
-                {
-                    if (value == curItem)
-                    {
-                        this.btn_command_save.Visible = false;
-                        this.btn_delete.Visible = false;
-                        
-                    }
-                }
+        //        foreach (string value in main_commands)
+        //        {
+        //            if (value == curItem)
+        //            {
+        //                this.btn_command_save.Visible = false;
+        //                this.btn_delete.Visible = false;                        
+        //            }
+        //        }
 
-                tb_command_name.Text = db_command;
-                tb_command_answer.Text = db_answer;
-                tb_command_info.Text = db_info;
-                tb_command_argument.Text = db_argument;
+        //        tb_command_name.Text = db_command;
+        //        tb_command_answer.Text = db_answer;
+        //        tb_command_info.Text = db_info;
+        //        tb_command_argument.Text = db_argument;
 
-                
-
-
-            }
-        }
+        //    }
+        //}
 
         private void btn_command_save_Click(object sender, EventArgs e)
         {

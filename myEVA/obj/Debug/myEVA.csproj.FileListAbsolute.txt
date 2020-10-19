@@ -18,3 +18,6 @@ C:\Users\MaikH\source\repos\myEVA\myEVA\bin\Debug\EntityFramework.SqlServer.xml
 C:\Users\MaikH\source\repos\myEVA\myEVA\bin\Debug\System.Data.SQLite.xml
 C:\Users\MaikH\source\repos\myEVA\myEVA\bin\Debug\System.Data.SQLite.dll.config
 C:\Users\MaikH\source\repos\myEVA\myEVA\obj\Debug\myEVA.csproj.CopyComplete
+C:\Users\maikh\Source\Repos\myEVA\myEVA\bin\Debug\HtmlAgilityPack.dll
+C:\Users\maikh\Source\Repos\myEVA\myEVA\bin\Debug\HtmlAgilityPack.pdb
+C:\Users\maikh\Source\Repos\myEVA\myEVA\bin\Debug\HtmlAgilityPack.xml
