@@ -40,8 +40,12 @@ namespace myEVA
         string db_command;
         string db_answer;
         string db_info;
+        string db_pfad;
         string db_argument;
 
+        // Variable um dem Programm zu sagen on es zuhören soll oder nicht
+        // true für zuhören
+        // false für weghören
         bool aktiv = true;
         bool command_kill = false;
 
@@ -95,16 +99,20 @@ namespace myEVA
         public Form1()
         {
             InitializeComponent();
-            db_create();
+            
             timer1.Start();
             notifyIcon1.Visible = true;
+            
+            // TODO später noch einen Zugriff erstellen um Computernamen oder Usernamen zu ändern
             if (user == "none")
             {
                 set_user();
                 set_computer();
+                db_create();
                 set_main_commands();
             }
 
+            
             // abfrage ob die Basisbefehle schon in der Datenbank existieren
             // wenn nicht speichern mit set_basis_commands
             // abrufen mit get_basis_commands ???  Wird eigentlich schon geladen beim Start aus der DB
@@ -159,24 +167,7 @@ namespace myEVA
         }
         private void Voice_in_out()
         {
-            Choices commands = new Choices();
-
-            // Computernamen in die Commandoliste hinzufügen damit er angesprochen werden kann
-            commands.Add(computer);
-            // Hauptcommandos hinzufügen
-            //commands.Add(main_commands);
-
-
-            // Computernamen in die Befehlliste hinzufügen 
-            comboBox_my_commands.Items.Add(computer);
-            
-            // Hauptcommandos in die Befehlliste hinzufügen 
- /*           foreach (string value in main_commands)
-            {
-                comboBox_commands.Items.Add(value);
-                
-            }
- */
+            Choices commands = new Choices();            
 
             // Commandos aus der Datenbank holen und zu den Command / Befehlsliste hinzufügen
             connection.Open();
@@ -214,42 +205,41 @@ namespace myEVA
             s.SpeakAsync("Hallo " + user + " wie kann ich dir helfen?");
         }
 
-
+        /// <summary>
+        /// Auswertung des Sprachbefehls
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void recEngine_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
-        {
-            
-
+        {            
             string speak_command = e.Result.Text;
 
             db_command_select(speak_command);
 
 
-            //MessageBox.Show(speak_command);
-            //s.SpeakAsync("Du sagtest " + speak_command + "1");
-            //s.SpeakAsync("Du sagtest " + speak_command + "2");
-            //s.Speak("Du sagtest " + speak_command + "3");
-
             if (aktiv)
             {
-                // ausführen sprich zuhören
-                //MessageBox.Show("hört zu");
+                // ausführen sprich zuhören                         
             }
             else
             {
+                // Hier wird nur der der Ruhemodus abgefragt
                 if (speak_command == computer)
                 {
+                    // Ich höre zu
                     aktiv = true;
 
                 }
                 else
                 {
-                    //MessageBox.Show("Ruhemodus");
+                    // Ich höre nicht zu
                     return;
                 }
 
                 
             }
 
+            
 
 
             if (speak_command == "tab start" || speak_command == "tab befehle")
@@ -268,69 +258,109 @@ namespace myEVA
             }
             else
             {
-                //db_command_select(speak_command);
-                // in der Datenbank gespeicherte Antwort ansagen lassen bevor das Ergebniss angesagt wird
-
-                // mit command_kill muss ich mir noch was besseres einfallen lassen
-                if (command_kill == false)
+                switch (db_argument)
                 {
-                    s.SpeakAsync(db_answer);
-                }
-                
-
-                Command_processing command_Processing = new Command_processing(db_command, db_answer, db_info, db_argument, command_kill);
-
-                command_kill = command_Processing.command_kill;
-
-                if (db_answer != command_Processing.command_answer)
-                {
-                    s.SpeakAsync(command_Processing.command_answer);
-                }
-
-                // Textfelder für Infos füllen und s.speak abrufen
-                tb_command_name.Text = command_Processing.command_name;
-                tb_command_answer.Text = command_Processing.command_answer;
-                tb_command_info.Text = command_Processing.command_info;
-                tb_command_argument.Text = command_Processing.command_argument;
-
-                
-
-                switch (command_Processing.command_argument)
-                {
-                    case "none":
-                        break;
-                    case "app":
-                        //s.Speak("Ich habe das laufende Programm " + command_Processing.command_name + " gefunden und geschlossen");
-                        db_command_update(this.tb_command_name.Text, db_answer, this.tb_command_info.Text, this.tb_command_argument.Text);
-                        break;
-                    case "cmd":                       
-                        
+                    case "exit":
+                        if (speak_command == "schalte dich aus")
+                        {
+                            s.SpeakAsync(db_answer);
+                            Thread.Sleep(4500);
+                            Application.Exit();
+                        }
+                        else
+                        {
+                            s.SpeakAsync(user + " hier ist irgendwas schief gelaufen. Mein Argument passt nicht zu diesem Befehl");
+                        }
                         break;
                     case "normal":
-                        Normalisiere_Form1();
+                        if (speak_command == computer)
+                        {
+                            // Antwortvielfalt
+                            Random r = new Random();
+                            string[] hallo_computer = new string[4] { db_answer, "ja " + user, "ja", "jup" };
+                            db_answer = hallo_computer[r.Next(4)];
+                            s.SpeakAsync(db_answer);
+                            Normalisiere_Form1();
+                        }
+                        else
+                        {
+                            s.SpeakAsync(user+" hier ist irgendwas schief gelaufen. Mein Argument passt nicht zu diesem Befehl");
+                        }                        
                         break;
                     case "minimieren":
-                        Minimiere_Form1();
-                        break;
-                    case "exit":
-                        Thread.Sleep(4500);
-                        Application.Exit();
-                        break;
-                    default:
-                        // command_Processing.command_argument muss in der Datenbank gespeichert werden wenn nicht none, cmd oder app ist (nochmal prüfen)
-                        // Process ID
-                        foreach (Process p_all in Process.GetProcesses())
+                        if (speak_command == "bereitschaft")
                         {
-                            if (p_all.Id == Convert.ToInt32(command_Processing.command_argument))
-                            {
-                                // ab in die datenbank
-                                db_command_update(this.tb_command_name.Text, db_answer, this.tb_command_info.Text, this.tb_command_argument.Text);
-                                //s.Speak("Deine Änderungen wurden gespeichert");
+                            // Antwortvielfalt
+                            Random r = new Random();
+                            string[] minimieren_computer = new string[4] { db_answer, "zu Befehl " + user, "bin dann mal weg", "jup" };                            
+                            db_answer = minimieren_computer[r.Next(4)];
+                            s.SpeakAsync(db_answer);
+                            Minimiere_Form1();
+                        }
+                        else
+                        {
+                            s.SpeakAsync(user + " hier ist irgendwas schief gelaufen. Mein Argument passt nicht zu diesem Befehl");
+                        }
+                        break;                                                        
+                    default:
+                        //db_command_select(speak_command);
+                        // in der Datenbank gespeicherte Antwort ansagen lassen bevor das Ergebniss angesagt wird
+
+                        // mit command_kill muss ich mir noch was besseres einfallen lassen
+                        if (command_kill == false)
+                        {
+                            s.SpeakAsync(db_answer);
+                        }
+
+
+                        Command_processing command_Processing = new Command_processing(db_command, db_answer, db_info, db_pfad, db_argument, command_kill);
+
+                        command_kill = command_Processing.command_kill;
+
+                        if (db_answer != command_Processing.command_answer)
+                        {
+                            s.SpeakAsync(command_Processing.command_answer);
+                        }
+
+                        // Textfelder für Infos füllen und s.speak abrufen
+                        tb_command_name.Text = command_Processing.command_name;
+                        tb_command_answer.Text = command_Processing.command_answer;
+                        tb_command_info.Text = command_Processing.command_info;
+                        tb_command_pfad.Text = command_Processing.command_pfad;
+                        tb_command_argument.Text = command_Processing.command_argument;
+
+                        switch (command_Processing.command_argument)
+                        {
+                            case "none":
                                 break;
-                            }
+                            case "app":
+                                //s.Speak("Ich habe das laufende Programm " + command_Processing.command_name + " gefunden und geschlossen");
+                                db_command_update(this.tb_command_name.Text, db_answer, this.tb_command_info.Text, this.tb_command_pfad.Text, this.tb_command_argument.Text);
+                                break;
+                            case "cmd":
+
+                                break;                            
+                            default:
+                                // command_Processing.command_argument muss in der Datenbank gespeichert werden wenn nicht none, cmd oder app ist (nochmal prüfen)
+                                // Process ID
+                                foreach (Process p_all in Process.GetProcesses())
+                                {
+                                    if (p_all.Id == Convert.ToInt32(command_Processing.command_argument))
+                                    {
+                                        // ab in die datenbank
+                                        db_command_update(this.tb_command_name.Text, db_answer, this.tb_command_info.Text, this.tb_command_pfad.Text, this.tb_command_argument.Text);
+                                        //s.Speak("Deine Änderungen wurden gespeichert");
+                                        break;
+                                    }
+                                }
+                                break;
                         }
                         break;
                 }
+                
+                
+
+                
             }
             
             
@@ -366,8 +396,17 @@ namespace myEVA
         }
 
         private void Normalisiere_Form1()
-        {            
-            WindowState = FormWindowState.Normal;
+        {
+            try
+            {
+                WindowState = FormWindowState.Normal;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            
             aktiv = true;
         }
 
@@ -395,6 +434,7 @@ namespace myEVA
                                                 "  command varchar(100) not null," +
                                                 "  answer varchar(100) not null," +
                                                 "  info varchar(250) not null," +
+                                                "  pfad varchar(250) not null," +
                                                 "  argument varchar(100) not null)",
                                                 "tb_commands");
             command.ExecuteNonQuery();
@@ -410,15 +450,16 @@ namespace myEVA
         /// <param name="_answer"></param>
         /// <param name="_info"></param>
         /// <param name="_argument"></param>
-        private void db_command_insert(string _command, string _answer, string _info, string _argument)
+        private void db_command_insert(string _command, string _answer, string _info, string _pfad, string _argument)
         {
             connection.Open();
 
             SQLiteCommand command = new SQLiteCommand(connection);
-            command.CommandText = String.Format("insert into tb_commands (command, answer, info, argument) values ('{0}','{1}','{2}','{3}')",
+            command.CommandText = String.Format("insert into tb_commands (command, answer, info, pfad, argument) values ('{0}','{1}','{2}','{3}','{4}')",
                                                 _command,
                                                 _answer,
                                                 _info,
+                                                _pfad,
                                                 _argument);
             command.ExecuteNonQuery();
 
@@ -427,14 +468,15 @@ namespace myEVA
             connection.Close();
         }
 
-        private void db_command_update(string _command, string _answer, string _info, string _argument)
+        private void db_command_update(string _command, string _answer, string _info, string _pfad, string _argument)
         {
             connection.Open();
 
             SQLiteCommand command = new SQLiteCommand(connection);
-            command.CommandText = String.Format("update tb_commands set answer = '{0}', info = '{1}', argument = '{2}'  where command = '{3}';",
+            command.CommandText = String.Format("update tb_commands set answer = '{0}', info = '{1}', pfad = '{2}', argument = '{3}'  where command = '{4}';",
                                                 _answer,
                                                 _info,
+                                                _pfad,
                                                 _argument,
                                                 _command);
             command.ExecuteNonQuery();
@@ -458,6 +500,7 @@ namespace myEVA
                     db_command = reader.GetString(reader.GetOrdinal("command"));
                     db_answer = reader.GetString(reader.GetOrdinal("answer"));
                     db_info = reader.GetString(reader.GetOrdinal("info"));
+                    db_pfad = reader.GetString(reader.GetOrdinal("pfad"));
                     db_argument = reader.GetString(reader.GetOrdinal("argument"));
                     //MessageBox.Show(string.Format("{0}, {1}, {2}, {3}", db_command, db_answer, db_info, db_argument));
                 }
@@ -467,6 +510,7 @@ namespace myEVA
                 db_command = search;    
                 db_answer = "";
                 db_info = "";
+                db_pfad = "";
                 db_argument = "none";
             }
                       
@@ -498,40 +542,49 @@ namespace myEVA
             ///*
             db_command_insert(  computer, 
                                 user + " was kann ich für dich tun", 
-                                "Systembefehl, holt die App wieder in den Vordergrund! (Ktivierungsaufruf)",
+                                "Systembefehl, holt die App wieder in den Vordergrund! (Aktivierungsaufruf)",
+                                "no pfad",
                                 "normal");
 
             db_command_insert(  "tab start",
                                 "ich wechsel auf Start",
                                 "Systembefehl, wechsel auf den Tab Start!",
+                                "no pfad",
                                 "none");
             db_command_insert(  "tab befehle",
                                 "ich wechsle auf Befehle",
                                 "Systembefehl, wechsel auf den Tab Befehle!",
+                                "no pfad",
                                 "none");
             db_command_insert(  "bereitschaft",
                                 "Bis gleich!",
                                 "Systembefehl, schickt die App in den Hintergrund und führt keine Befehle mehr aus (außer dem Aktivierungsaufruf)!",
+                                "no pfad",
                                 "minimieren");
             db_command_insert(  "Programm beenden",
                                 "Welches Programm soll ich beenden?",
                                 "Systembefehl, zum beenden von Programmen!",
+                                "no pfad",
                                 "none");
             db_command_insert(  "Datum",
                                 "",
                                 "Systembefehl, sagt das aktuelle Datum.",
+                                "no pfad",
                                 "none");
             db_command_insert(  "Zeit",
                                 "",
                                 "Systembefehl, sagt die aktuelle Uhrzeit an.",
+                                "no pfad",
                                 "none");
             db_command_insert(  "Vorlesen",
                                 "",
                                 "Systembefehl, liest den Text aus der Zwischenablage vor.",
+                                "no pfad",
                                 "none");
             db_command_insert(  "schalte dich aus",
                                 "ok " + user + ", dann bis zu nächsten mal",
                                 "Systembefehl, schließt die App MyEVA.",
+                                "no pfad",
                                 "exit");
             //*/
 
@@ -577,6 +630,7 @@ namespace myEVA
                 tb_command_name.Text = db_command;
                 tb_command_answer.Text = db_answer;
                 tb_command_info.Text = db_info;
+                tb_command_pfad.Text = db_pfad;
                 tb_command_argument.Text = db_argument;
 
             }
@@ -631,7 +685,7 @@ namespace myEVA
 
                     if (result == DialogResult.Yes)
                     {
-                        db_command_update(this.tb_command_name.Text, this.tb_command_answer.Text, this.tb_command_info.Text, this.tb_command_argument.Text);
+                        db_command_update(this.tb_command_name.Text, this.tb_command_answer.Text, this.tb_command_info.Text, this.tb_command_pfad.Text, this.tb_command_argument.Text);
                         s.Speak("Deine Änderungen wurden gespeichert");
 
 
@@ -645,7 +699,7 @@ namespace myEVA
                 }
             }
 
-            db_command_insert(this.tb_command_name.Text, this.tb_command_answer.Text, this.tb_command_info.Text, this.tb_command_argument.Text);
+            db_command_insert(this.tb_command_name.Text, this.tb_command_answer.Text, this.tb_command_info.Text, this.tb_command_pfad.Text, this.tb_command_argument.Text);
 
             s.Speak("gespeichert, ich muss mich jetzt neustarten, damit der neue Befehl verfügbar ist");
             //Thread.Sleep(55000);

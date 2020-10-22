@@ -20,27 +20,49 @@ namespace myEVA
         public string command_name;
         public string command_answer;
         public string command_info;
+        public string command_pfad;
         public string command_argument;
         public bool command_kill;
 
         
 
-        public Command_processing(string _command_name, string _command_answer, string _command_info, string _command_argument, bool _command_kill)
+        public Command_processing(string _command_name, string _command_answer, string _command_info, string _command_pfad, string _command_argument, bool _command_kill)
         {
             command_name = _command_name;
             command_answer = _command_answer;
             command_info = _command_info;
+            command_pfad = _command_pfad;
             command_argument = _command_argument;
             command_kill = _command_kill;
 
-            if (command_argument == "none")
+            /*
+            command_argument    none = nix
+                                app = windows programm
+                                cmd = ipconfig (Konsole)
+                                564984 = irgendeine ProcessID
+                            
+                                exit = myEVA schließen
+
+            sollten vielleicht noch  text hinzufügen
+
+            */
+
+            switch (command_argument)
             {
-                Main_commands(command_name);
+                case "none":
+                    Main_commands(command_name);
+                    break;
+                case "app":
+                    Command_app();
+                    break;
+                case "cmd":
+                    Command_cmd();
+                    break;                
+                default:
+                    break;
             }
-            else
-            {
-                Command_start_tool();
-            }
+
+            
         }
         
         
@@ -52,125 +74,85 @@ namespace myEVA
             // Falls doch kein programm geschlossen werden soll
             command_kill = false;
 
-            string computer = myEVA.Properties.Settings.Default.computername;
-            string user = myEVA.Properties.Settings.Default.username;
-
-            if (_command_name == computer)
+            switch (_command_name)
             {
-                // Antwortvielfalt
-                Random r = new Random();
-                string[] hallo_computer = new string[4] { command_answer, "ja " + user, "ja", "jup" };
-
-                //command_name = _command_name;
-                command_answer = hallo_computer[r.Next(4)];
-                //command_info = "Systembefehl, holt die App wieder in den Vordergrund!";
-                //command_argument = "normal";
-
-            }
-            else
-            {
-                switch (_command_name)
-                {
-                    case "bereitschaft":
-                        // Antwortvielfalt
-                        Random r = new Random();
-                        string[] minimieren_computer = new string[4] { command_answer, "zu Befehl " + user, "bin dann mal weg", "jup" };
-                        //command_name = _command_name;
-                        command_answer = minimieren_computer[r.Next(4)];
-                        //command_info = "Systembefehl, minimiert die App";
-                        //command_argument = "minimieren";
-                        
-                        break;
-                    
-                    
-                    
-                    case "Programm beenden":
-                        //command_name = _command_name;
-                        //command_answer = "welches Programm?";
-                        //command_info = "Systembefehl zum beenden von Programmen!";
-                        //command_argument = "none";
-                        command_kill = true;
-                        break;
-                    
-                        
-                    case "datum":
-                        //command_name = _command_name;
-                        command_answer = DateTime.Now.ToString("d");
-                        //command_info = "Systembefehl, sagt das aktuelle Datum.";
-                        break;
-                    case "zeit":
-                        //command_name = _command_name;
-                        command_answer = DateTime.Now.ToString("HH:mm");
-                        //command_info = "Systembefehl, sagt die aktuelle Uhrzeit an.";
-                        break;
-                    case "vorlesen":
-                        string zwischenablage = null;                        
-                        if (Clipboard.ContainsText())
-                        {                            
-                            zwischenablage = Clipboard.GetText();
-                        }
-                        else
-                        {
-                            zwischenablage = "Bitte markiere erst etwas.";
-                        }
-                        //command_name = _command_name;
-                        command_answer = zwischenablage;
-                        //command_info = "Systembefehl, liest den Text aus der Zwischenablage vor.";
-                        break;
-                    case "schalte dich aus":
-                        //command_name = _command_name;
-                        //command_answer = "ok " + user + ", dann bis demnächst";
-                        //command_info = "Systembefehl, schließt die App.";
-                        command_argument = "exit";
-                        break;
-                    default:
-                        break;
-                }
+                case "Programm beenden":
+                    //command_name = _command_name;
+                    //command_answer = "welches Programm?";
+                    //command_info = "Systembefehl zum beenden von Programmen!";
+                    //command_argument = "none";
+                    command_kill = true;
+                    break;
+                case "datum":
+                    //command_name = _command_name;
+                    command_answer = DateTime.Now.ToString("d");
+                    //command_info = "Systembefehl, sagt das aktuelle Datum.";
+                    break;
+                case "zeit":
+                    //command_name = _command_name;
+                    command_answer = DateTime.Now.ToString("HH:mm");
+                    //command_info = "Systembefehl, sagt die aktuelle Uhrzeit an.";
+                    break;
+                case "vorlesen":
+                    string zwischenablage = null;
+                    if (Clipboard.ContainsText())
+                    {
+                        zwischenablage = Clipboard.GetText();
+                    }
+                    else
+                    {
+                        zwischenablage = "Bitte markiere erst etwas.";
+                    }
+                    //command_name = _command_name;
+                    command_answer = zwischenablage;
+                    //command_info = "Systembefehl, liest den Text aus der Zwischenablage vor.";
+                    break;                
+                default:
+                    break;
             }
 
-            
+
 
 
         }
 
-        private void Command_start_tool()
+        private void Command_cmd()
         {
-            
+            // commando_name ist z.B ping localhost
+            Process.Start("cmd.exe", "/K " + command_name);
 
-            if (command_argument == "cmd")
-            {
-                // commando_name ist z.B ping localhost
-                Process.Start("cmd.exe", "/K " + command_name);
+            //Process oProcess = new Process();
 
-                //Process oProcess = new Process();
+            //oProcess.StartInfo.FileName = "cmd.exe";
+            //oProcess.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
+            //oProcess.StartInfo.Arguments = command_name + " > cmd_ausgabe.txt";
 
-                //oProcess.StartInfo.FileName = "cmd.exe";
-                //oProcess.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
-                //oProcess.StartInfo.Arguments = command_name + " > cmd_ausgabe.txt";
+            //oProcess.Start();
 
-                //oProcess.Start();
+            //if (oProcess.HasExited)
+            //{
 
-                //if (oProcess.HasExited)
-                //{
-
-                //}
-                //else
-                //{
-                //    oProcess.Kill();
-                //}
+            //}
+            //else
+            //{
+            //    oProcess.Kill();
+            //}
 
 
-                //StreamReader myFile = new StreamReader("cmd_ausgabe.txt", System.Text.Encoding.Default);
-                //command_answer = myFile.ReadToEnd();
-                //myFile.Close();
+            //StreamReader myFile = new StreamReader("cmd_ausgabe.txt", System.Text.Encoding.Default);
+            //command_answer = myFile.ReadToEnd();
+            //myFile.Close();
 
-                command_kill = false;
-            }
-            else if (command_kill)
+            command_kill = false;
+        }
+
+        private void Command_app()
+        {
+            if (command_kill)
             {
                 // Programm schließen
                 Process P = Process.GetProcessById(Convert.ToInt32(command_argument));
-                                
+
                 foreach (Process p_all in Process.GetProcesses())
                 {
                     if (p_all.Id == P.Id)
@@ -188,13 +170,7 @@ namespace myEVA
                 {
                     command_answer = "Ich habe das laufende Programm " + command_name + " nicht gefunden. Vielleicht hast du es selber gestartet";
                 }
-                
-                
 
-                
-                
-
-                
             }
             else
             {
@@ -205,18 +181,16 @@ namespace myEVA
                     {
                         //command_argument bekommt die ProcessID
                         Process P = new Process();
-                        P.StartInfo.FileName = command_name + ".exe";
+                        P.StartInfo.FileName = command_pfad;
                         P.Start();
                         command_argument = Convert.ToString(P.Id);
                     }
                     catch (Exception)
                     {
-
-                        MessageBox.Show("Ich konnte "+ command_name + ".exe nicht starten!");
+                        MessageBox.Show("Ich konnte " + command_name + ".exe nicht starten!");
                     }
 
-
-                }                
+                }
                 else  // Programm läuft
                 {
                     // Hier kommt die ID an
@@ -226,12 +200,10 @@ namespace myEVA
                     BringMainWindowToFront(P.ProcessName);
                     command_answer = "Ich habe ein laufendes Programm Namens " + command_name + " gefunden";
                 }
-                
+
 
             }
         }
-
-
 
 
         /// <summary>
