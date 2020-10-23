@@ -24,7 +24,10 @@ namespace myEVA
         public string command_argument;
         public bool command_kill;
 
-        
+        public Command_processing()
+        {
+
+        }
 
         public Command_processing(string _command_name, string _command_answer, string _command_info, string _command_pfad, string _command_argument, bool _command_kill)
         {
@@ -65,7 +68,66 @@ namespace myEVA
             
         }
         
-        
+        public string Get_Date()
+        {
+            return DateTime.Now.ToString("d");
+        }
+
+        public string Get_Time()
+        {
+            return DateTime.Now.ToString("HH:mm");
+        }
+
+        public string Get_ReadClipboard()
+        {
+            string zwischenablage = null;
+            if (Clipboard.ContainsText())
+            {
+                zwischenablage = Clipboard.GetText();
+            }
+            else
+            {
+                zwischenablage = "Bitte markiere erst etwas.";
+            }
+            
+            return zwischenablage;
+        }
+
+        public void Cmd_ToolStart(string command_pfad)
+        {
+            try
+            {
+                //command_argument bekommt die ProcessID
+                Process P = new Process();
+                P.StartInfo.FileName = command_pfad;
+                P.Start();
+                command_argument = Convert.ToString(P.Id);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Ich konnte " + command_name + ".exe nicht starten!");
+            }
+        }
+
+
+        public string Cmd_ToolClose(string command_argument, string command_name)
+        {
+            // Programm schließen
+            Process P = Process.GetProcessById(Convert.ToInt32(command_argument));
+
+            foreach (Process p_all in Process.GetProcesses())
+            {
+                if (p_all.Id == P.Id)
+                {
+                    P.CloseMainWindow();                    
+                    return "Ich habe das laufende Programm " + command_name + " gefunden und geschlossen";
+                    
+                }
+            }
+
+            return "Ich habe das laufende Programm " + command_name + " nicht gefunden. Vielleicht hast du es selber gestartet";
+        }
+
 
         private void Main_commands(string _command_name)
         {
@@ -235,7 +297,7 @@ namespace myEVA
                 {
                     //the window is hidden so try to restore it before setting focus.
                     ShowWindow(bProcess.Handle, ShowWindowEnum.Show); // Hier stand vorher .Restore  vielleicht funzt Show besser
-                    MessageBox.Show("bin da");
+                    //MessageBox.Show("bin da");
                 }
                 //set user the focus to the window
                 SetForegroundWindow(bProcess.MainWindowHandle);

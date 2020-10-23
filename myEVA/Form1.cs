@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Xml;
 using System.IO;
+using System.Data.Entity.Core.Mapping;
 
 namespace myEVA
 {
@@ -194,6 +195,8 @@ namespace myEVA
             Grammar grammar = new Grammar(gbuilder);
 
             h.LoadGrammar(grammar);
+            //h.LoadGrammar(new DictationGrammar());
+
 
             // Fehler abfangen, falls kein Micro angeschlossen ist
             h.SetInputToDefaultAudioDevice();
@@ -214,7 +217,27 @@ namespace myEVA
         {            
             string speak_command = e.Result.Text;
 
+            
             db_command_select(speak_command);
+
+            // test class Command
+            Command command = new Command(db_command, db_answer, db_info, db_pfad, db_argument, command_kill);
+            string test = command.GetArgument();
+            //MessageBox.Show(test);
+
+            if (command.command_kill)
+            {
+                command_kill = command.command_kill;
+                s.SpeakAsync(command.GetAnswer());
+                return;
+            }
+
+            s.SpeakAsync(command.GetAnswer());
+
+
+
+
+
 
 
             if (aktiv)

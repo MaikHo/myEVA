@@ -70,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bookmarks.cs" />
-    <Compile Include="Commands.cs" />
+    <Compile Include="Command.cs" />
     <Compile Include="Command_processing.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
